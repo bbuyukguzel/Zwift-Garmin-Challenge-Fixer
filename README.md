@@ -57,7 +57,14 @@ python zwift_garmin.py latest --device "Fenix 6" --non-interactive
 python zwift_garmin.py latest --device "Fenix 8" --upload --non-interactive
 ```
 
-In non-interactive mode, missing credentials or a Garmin MFA prompt cause the command to exit with an error. For a Garmin account with MFA, create a session with the library's login example and point `GARMINTOKENS` at its session directory. [Garmin login example](https://github.com/cyberjunky/python-garminconnect/blob/master/example.py)
+In non-interactive mode, missing credentials or a Garmin MFA challenge cause the command to exit with an error. To set up a saved session, set `GARMIN_EMAIL` and `GARMIN_PASSWORD` in your environment and run:
+
+```powershell
+$env:GARMINTOKENS = Join-Path $env:LOCALAPPDATA 'ZwiftGarmin\GarminSession'
+python zwift_garmin.py garmin-login
+```
+
+Enter the MFA code if Garmin requests it. On future runs, set `GARMINTOKENS` to the same directory. The saved session can authorize uploads without the Garmin email or password. If a previous upload stopped at MFA, retry the already converted file with `python zwift_garmin.py upload <file.fit> --non-interactive`.
 
 ## Verify challenge credit
 

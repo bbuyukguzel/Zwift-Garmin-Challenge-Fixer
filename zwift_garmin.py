@@ -142,14 +142,19 @@ def require_garmin_environment():
         raise RuntimeError("Set GARMINTOKENS or both GARMIN_EMAIL and GARMIN_PASSWORD.")
 
 
-def upload(path, *, non_interactive=False):
+def connect_garmin(*, non_interactive=False, save_session=False):
     try:
         from garminconnect import Garmin
     except ImportError as exc:
         raise RuntimeError("Install the upload dependency with: python -m pip install garminconnect==0.3.20") from exc
 
     email, password, tokenstore = garmin_environment()
-    if non_interactive:
+    if save_session:
+        if not tokenstore or tokenstore.lstrip().startswith("{"):
+            raise RuntimeError("Set GARMINTOKENS to the Garmin session directory.")
+        if not email or not password:
+            raise RuntimeError("Set GARMIN_EMAIL and GARMIN_PASSWORD to create a session.")
+    elif non_interactive:
         require_garmin_environment()
     elif not tokenstore:
         email = email or input("Garmin email: ").strip()
@@ -158,8 +163,16 @@ def upload(path, *, non_interactive=False):
     status, state = client.login(tokenstore)
     if status == "needs_mfa":
         if non_interactive:
-            raise RuntimeError("Garmin requires MFA. Provide a valid saved session via GARMINTOKENS.")
+            raise RuntimeError("Garmin requires MFA. Set GARMINTOKENS and run garmin-login once.")
         client.resume_login(state, getpass("Garmin MFA code: ").strip())
+    if save_session:
+        client.client.dump(tokenstore)
+        print("Garmin session saved to GARMINTOKENS.")
+    return client
+
+
+def upload(path, *, non_interactive=False):
+    client = connect_garmin(non_interactive=non_interactive)
     response = client.upload_activity(str(path))
     print(json.dumps(response, ensure_ascii=False, indent=2))
     if not isinstance(response, dict) or not response.get("detailedImportResult", {}).get("successes"):
@@ -187,11 +200,15 @@ def main():
         command.add_argument("--upload", action="store_true")
     uploader = commands.add_parser("upload", help="Upload an existing FIT file")
     uploader.add_argument("path", type=Path)
+    commands.add_parser("garmin-login", help="Save a Garmin session for future uploads")
     for command in (converter, latest, uploader):
         command.add_argument("--non-interactive", action="store_true", help="Require credentials from the environment")
     args = parser.parse_args()
 
     try:
+        if args.command == "garmin-login":
+            connect_garmin(save_session=True)
+            return
         if args.non_interactive and (args.command == "upload" or args.upload):
             require_garmin_environment()
         if args.command == "upload":
