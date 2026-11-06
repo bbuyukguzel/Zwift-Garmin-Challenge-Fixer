@@ -28,7 +28,7 @@ python zwift_garmin.py convert ride.fit -o ride.garmin.fit
 
 Without `-o`, `convert` creates a `.garmin.fit` copy next to the source. This command refuses to overwrite existing files. Both `latest` and `convert` support these options:
 
-- `--device MODEL_OR_CODE` sets the Garmin device product and leaves the Unit ID empty. Use an exact FIT profile name such as `fenix6` or `edge_840`, a readable spelling such as `"Fēnix 6"` or `"Edge 840"`, or a numeric product code such as `4062`. Names come from the installed Garmin FIT SDK. The `--edge-1050` and `--fenix-8` aliases also work. [Garmin FIT product profile](https://github.com/garmin/fit-python-sdk/blob/main/garmin_fit_sdk/profile.py)
+- `--device MODEL_OR_CODE` selects a Garmin device. Use an exact FIT profile name such as `fenix6` or `edge_840`, a readable spelling such as `"Fēnix 6"` or `"Edge 840"`, or a numeric product code such as `4062`. Names come from the installed Garmin FIT SDK. The `--edge-1050` and `--fenix-8` aliases also work. [Garmin FIT product profile](https://github.com/garmin/fit-python-sdk/blob/main/garmin_fit_sdk/profile.py)
 - `--garmin-reference device-ride.fit` uses the product code and Unit ID from an original activity recorded by your Garmin device. Use this option by itself for the device identity.
 - `--indoor` changes the FIT sport subtype to indoor cycling.
 
@@ -72,11 +72,13 @@ Enter the MFA code if Garmin requests it. On future runs, set `GARMINTOKENS` to 
 
 For November Ride to 200, a Zwift ride counted after conversion with an original fēnix 8 FIT as the reference. The reference supplies the watch's model and real Unit ID. The model-only fēnix 8 and Tacx Training iOS trials did not count on the same account.
 
+Set `GARMIN_DEVICE` to your device model and `GARMIN_UNIT_ID` to its real numeric Unit ID. With both variables available, you can omit the device arguments:
+
 ```powershell
-python zwift_garmin.py latest --garmin-reference .\fenix8-reference.fit --upload --non-interactive
+python zwift_garmin.py latest --upload --non-interactive
 ```
 
-Export an original activity from your own Garmin device to create the reference file. Keep it local because it contains activity data and your device's Unit ID.
+An explicit `--device` overrides the environment model. If it selects a different model, the configured Unit ID is left out. Alternatively, pass `--garmin-reference` with an original activity from your own device to use the identity from that file. Keep your Unit ID and reference FIT local.
 
 Garmin requires joining the challenge and meeting its listed requirements within the challenge period. Its support guidance includes activities recorded in Tacx Training and excludes third-party sources such as Zwift from badge eligibility. TrainingPeaks Virtual has its own Garmin authorization flow. The exact server-side rules for challenge credit are undocumented. [Garmin badges](https://support.garmin.com/en-US/?faq=6pECo6UIFn7ergw8kNmfu9) · [Garmin eligibility guidance](https://support.garmin.ru/support/solutions/articles/26000043125) · [TrainingPeaks Virtual integration](https://help.trainingpeaks.com/hc/en-us/articles/41893283744909-TrainingPeaks-Virtual-Connections-Screenshots)
 

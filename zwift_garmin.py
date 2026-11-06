@@ -45,6 +45,21 @@ def parse_device(value):
     )
 
 
+def device_from_environment(selected_product):
+    model = os.getenv("GARMIN_DEVICE")
+    configured_product = parse_device(model) if model else None
+    product = selected_product or configured_product
+    unit_id = os.getenv("GARMIN_UNIT_ID", "").strip()
+    if not unit_id or (configured_product and product != configured_product):
+        return product or TACX_WINDOWS, 0
+    if product is None:
+        raise ValueError("Set GARMIN_DEVICE or pass --device when using GARMIN_UNIT_ID.")
+    if not (unit_id.isascii() and unit_id.isdecimal() and len(unit_id) <= 10
+            and 0 < int(unit_id) <= 0xFFFFFFFF):
+        raise ValueError("GARMIN_UNIT_ID must be a positive 32-bit integer.")
+    return product, int(unit_id)
+
+
 def read_fit(data):
     if (
         len(data) < 14
@@ -87,8 +102,7 @@ def patch_fields(data, message, replacements, required=()):
         raise ValueError(f"Required fields missing from {message.name}.")
 
 
-def convert(source, indoor=False, reference=None, *, product=TACX_WINDOWS):
-    unit_id = 0
+def convert(source, indoor=False, reference=None, *, product=TACX_WINDOWS, unit_id=0):
     if reference is not None:
         identities = [m for m in read_fit(reference) if m.name == "file_id"]
         if len(identities) != 1:
@@ -106,7 +120,7 @@ def convert(source, indoor=False, reference=None, *, product=TACX_WINDOWS):
                 raise ValueError("Input must be a Zwift activity.")
             patch_fields(result, message, {
                 1: (GARMIN, 2), 2: (product, 2), 3: (unit_id, 4), 8: (None, None),
-            }, required=(1, 2, 3) if reference is not None else (1, 2))
+            }, required=(1, 2, 3) if unit_id else (1, 2))
             files += 1
         elif message.name == "device_info" and raw(message, 0) == 0 and raw(message, 2) == ZWIFT:
             patch_fields(result, message, {
@@ -211,7 +225,6 @@ def main():
         device.add_argument("--fenix-8", dest="product", action="store_const", const=FENIX_8,
                             help="Alias for --device fenix8")
         device.add_argument("--garmin-reference", type=Path, help="FIT activity from your Garmin device")
-        command.set_defaults(product=TACX_WINDOWS)
         command.add_argument("--upload", action="store_true")
     uploader = commands.add_parser("upload", help="Upload an existing FIT file")
     uploader.add_argument("path", type=Path)
@@ -233,6 +246,7 @@ def main():
             return
 
         reference = args.garmin_reference.read_bytes() if args.garmin_reference else None
+        product, unit_id = device_from_environment(args.product) if reference is None else (TACX_WINDOWS, 0)
         if args.command == "latest":
             from zwift_remote import download_latest_ride
 
@@ -243,7 +257,7 @@ def main():
             target = args.output or args.source.with_name(f"{args.source.stem}.garmin.fit")
         if target.suffix.lower() != ".fit":
             raise ValueError("Output must have a .fit extension.")
-        result = convert(source, args.indoor, reference, product=args.product)
+        result = convert(source, args.indoor, reference, product=product, unit_id=unit_id)
         try:
             with target.open("xb") as file:
                 file.write(result)
