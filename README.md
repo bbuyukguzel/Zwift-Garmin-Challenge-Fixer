@@ -43,6 +43,8 @@ python zwift_garmin.py upload ride.garmin.fit
 
 Add `--upload` to `latest` or `convert` to upload after conversion. If the same output already exists in the current directory, `latest` skips the upload. Use the standalone `upload` command to upload an existing file or retry a failed upload.
 
+Garmin can acknowledge a file with an upload ID and leave both result lists empty. In that case, the command reports acceptance. Check Garmin Connect for the activity before retrying.
+
 ### Run without prompts
 
 Set these variables in the environment that starts the command. If your task runner supports secrets, use its secret settings for passwords.

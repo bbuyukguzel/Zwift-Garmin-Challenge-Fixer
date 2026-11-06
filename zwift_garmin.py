@@ -3,7 +3,6 @@
 import argparse
 from getpass import getpass
 import io
-import json
 import os
 from pathlib import Path
 import struct
@@ -174,9 +173,24 @@ def connect_garmin(*, non_interactive=False, save_session=False):
 def upload(path, *, non_interactive=False):
     client = connect_garmin(non_interactive=non_interactive)
     response = client.upload_activity(str(path))
-    print(json.dumps(response, ensure_ascii=False, indent=2))
-    if not isinstance(response, dict) or not response.get("detailedImportResult", {}).get("successes"):
-        raise RuntimeError("Garmin did not confirm a new import. Check Connect before retrying.")
+    result = response.get("detailedImportResult") if isinstance(response, dict) else None
+    if not isinstance(result, dict):
+        raise RuntimeError("Garmin returned an unexpected upload response. Check Connect before retrying.")
+    failures = result.get("failures")
+    if failures:
+        details = "; ".join(
+            message["content"]
+            for failure in failures
+            for message in failure.get("messages", [])
+            if message.get("content")
+        )
+        raise RuntimeError(f"Garmin reported an import failure: {details or 'No details provided.'}")
+    if result.get("successes"):
+        print("Garmin confirmed the activity import.")
+    elif result.get("uploadId") and result.get("successes") == [] and failures == []:
+        print(f"Garmin accepted upload {result['uploadId']}. Check Garmin Connect for the activity.")
+    else:
+        raise RuntimeError("Garmin did not acknowledge the upload. Check Connect before retrying.")
 
 
 def main():
