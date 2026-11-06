@@ -29,6 +29,7 @@ python zwift_garmin.py convert ride.fit -o ride.garmin.fit
 Without `-o`, the converter creates a `.garmin.fit` copy next to the source. It refuses to overwrite existing files. Both `latest` and `convert` support these options:
 
 - `--edge-1050` sets the Garmin Edge 1050 product code and leaves the Unit ID empty.
+- `--fenix-8` sets the standard Garmin fēnix 8 product code and leaves the Unit ID empty.
 - `--garmin-reference device-ride.fit` uses the product code and Unit ID from an original activity recorded by your Garmin device. Use this option by itself for the device identity.
 - `--indoor` changes the FIT sport subtype to indoor cycling.
 
@@ -54,7 +55,7 @@ Set these variables in the environment that starts the command. If your task run
 
 ```powershell
 python zwift_garmin.py latest --edge-1050 --non-interactive
-python zwift_garmin.py latest --edge-1050 --upload --non-interactive
+python zwift_garmin.py latest --fenix-8 --upload --non-interactive
 ```
 
 In non-interactive mode, missing credentials or a Garmin MFA prompt cause the command to exit with an error. For a Garmin account with MFA, create a session with the library's login example and point `GARMINTOKENS` at its session directory. [Garmin login example](https://github.com/cyberjunky/python-garminconnect/blob/master/example.py)

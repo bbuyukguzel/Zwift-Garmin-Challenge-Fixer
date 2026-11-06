@@ -14,6 +14,7 @@ from fitdecode.utils import compute_crc
 
 GARMIN, ZWIFT, TACX_WINDOWS = 1, 260, 20533
 EDGE_1050 = 4440
+FENIX_8 = 4536
 CYCLING, INDOOR_CYCLING = 2, 6
 SPORT_FIELDS = {"sport": (0, 1), "session": (5, 6), "lap": (25, 39)}
 
@@ -60,8 +61,8 @@ def patch_fields(data, message, replacements, required=()):
         raise ValueError(f"Required fields missing from {message.name}.")
 
 
-def convert(source, indoor=False, reference=None, *, edge_1050=False):
-    product, unit_id = (EDGE_1050 if edge_1050 else TACX_WINDOWS), 0
+def convert(source, indoor=False, reference=None, *, product=TACX_WINDOWS):
+    unit_id = 0
     if reference is not None:
         identities = [m for m in read_fit(reference) if m.name == "file_id"]
         if len(identities) != 1:
@@ -149,7 +150,10 @@ def main():
     for command in (converter, latest):
         command.add_argument("--indoor", action="store_true")
         device = command.add_mutually_exclusive_group()
-        device.add_argument("--edge-1050", action="store_true", help="Use the Edge 1050 product code")
+        device.add_argument("--edge-1050", dest="product", action="store_const", const=EDGE_1050,
+                            default=TACX_WINDOWS, help="Use the Edge 1050 product code")
+        device.add_argument("--fenix-8", dest="product", action="store_const", const=FENIX_8,
+                            help="Use the standard fenix 8 product code")
         device.add_argument("--garmin-reference", type=Path, help="FIT activity from your Garmin device")
         command.add_argument("--upload", action="store_true")
     uploader = commands.add_parser("upload", help="Upload an existing FIT file")
@@ -178,7 +182,7 @@ def main():
             target = args.output or args.source.with_name(f"{args.source.stem}.garmin.fit")
         if target.suffix.lower() != ".fit":
             raise ValueError("Output must have a .fit extension.")
-        result = convert(source, args.indoor, reference, edge_1050=args.edge_1050)
+        result = convert(source, args.indoor, reference, product=args.product)
         try:
             with target.open("xb") as file:
                 file.write(result)
