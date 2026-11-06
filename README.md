@@ -26,7 +26,7 @@ The command downloads the original FIT file for your latest completed cycling ac
 python zwift_garmin.py convert ride.fit -o ride.garmin.fit
 ```
 
-Without `-o`, the converter creates a `.garmin.fit` copy next to the source. It refuses to overwrite existing files. Both `latest` and `convert` support these options:
+Without `-o`, `convert` creates a `.garmin.fit` copy next to the source. This command refuses to overwrite existing files. Both `latest` and `convert` support these options:
 
 - `--device MODEL_OR_CODE` sets the Garmin device product and leaves the Unit ID empty. Use an exact FIT profile name such as `fenix6` or `edge_840`, a readable spelling such as `"Fēnix 6"` or `"Edge 840"`, or a numeric product code such as `4062`. Names come from the installed Garmin FIT SDK. The `--edge-1050` and `--fenix-8` aliases also work. [Garmin FIT product profile](https://github.com/garmin/fit-python-sdk/blob/main/garmin_fit_sdk/profile.py)
 - `--garmin-reference device-ride.fit` uses the product code and Unit ID from an original activity recorded by your Garmin device. Use this option by itself for the device identity.
@@ -41,7 +41,7 @@ python -m pip install garminconnect==0.3.20
 python zwift_garmin.py upload ride.garmin.fit
 ```
 
-Add `--upload` to `latest` or `convert` to upload after conversion. If the same output already exists in the current directory, `latest` skips the upload. Use the standalone `upload` command to upload an existing file or retry a failed upload.
+Add `--upload` to `latest` or `convert` to upload after conversion. If the output for the same Zwift activity differs, `latest` replaces the local FIT and proceeds with the requested upload. If the output is identical, it skips the upload. Use the standalone `upload` command to upload an existing file or retry a failed upload.
 
 Garmin can acknowledge a file with an upload ID and leave both result lists empty. In that case, the command reports acceptance. Check Garmin Connect for the activity before retrying.
 

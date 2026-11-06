@@ -6,6 +6,7 @@ import io
 import os
 from pathlib import Path
 import struct
+from tempfile import NamedTemporaryFile
 import unicodedata
 
 import fitdecode
@@ -247,12 +248,21 @@ def main():
             with target.open("xb") as file:
                 file.write(result)
         except FileExistsError:
-            if args.command != "latest" or target.read_bytes() != result:
+            if args.command != "latest":
                 raise
-            print(f"Already converted: {target.resolve()}")
-            if args.upload:
-                print("Use the upload command if this file has not been imported yet.")
-            return
+            if target.read_bytes() == result:
+                print(f"Already converted: {target.resolve()}")
+                if args.upload:
+                    print("Use the upload command if this file has not been imported yet.")
+                return
+            with NamedTemporaryFile(dir=target.parent, delete=False) as file:
+                replacement = Path(file.name)
+                try:
+                    file.write(result)
+                    file.close()
+                    replacement.replace(target)
+                finally:
+                    replacement.unlink(missing_ok=True)
         print(target.resolve(), flush=True)
         if args.upload:
             upload(target, non_interactive=args.non_interactive)
