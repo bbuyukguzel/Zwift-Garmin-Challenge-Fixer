@@ -15,7 +15,7 @@ python -m pip install -r requirements.txt
 After saving the ride to your Zwift account, run this on any computer with Python.
 
 ```powershell
-python zwift_garmin.py latest --edge-1050
+python zwift_garmin.py latest --device "Edge 840"
 ```
 
 The command downloads the original FIT file for your latest completed cycling activity and writes `zwift-<activity-id>.garmin.fit` in the current directory. It accepts Zwift credentials from the terminal or environment variables and keeps them out of local files. The download uses undocumented Zwift Companion API endpoints. If they change, use the local conversion command below with a FIT file downloaded from the Zwift website. [Zwift FIT download instructions](https://support.zwift.com/en_us/locating-your-activity-log-and-workout-files-BykKO63fr) · [API reference implementation](https://github.com/benniblau/zwift-mcp)
@@ -28,8 +28,7 @@ python zwift_garmin.py convert ride.fit -o ride.garmin.fit
 
 Without `-o`, the converter creates a `.garmin.fit` copy next to the source. It refuses to overwrite existing files. Both `latest` and `convert` support these options:
 
-- `--edge-1050` sets the Garmin Edge 1050 product code and leaves the Unit ID empty.
-- `--fenix-8` sets the standard Garmin fēnix 8 product code and leaves the Unit ID empty.
+- `--device MODEL_OR_CODE` sets the Garmin device product and leaves the Unit ID empty. Use an exact FIT profile name such as `fenix6` or `edge_840`, a readable spelling such as `"Fēnix 6"` or `"Edge 840"`, or a numeric product code such as `4062`. Names come from the installed Garmin FIT SDK. The `--edge-1050` and `--fenix-8` aliases also work. [Garmin FIT product profile](https://github.com/garmin/fit-python-sdk/blob/main/garmin_fit_sdk/profile.py)
 - `--garmin-reference device-ride.fit` uses the product code and Unit ID from an original activity recorded by your Garmin device. Use this option by itself for the device identity.
 - `--indoor` changes the FIT sport subtype to indoor cycling.
 
@@ -54,8 +53,8 @@ Set these variables in the environment that starts the command. If your task run
 | Garmin upload | `GARMIN_EMAIL` and `GARMIN_PASSWORD`, or `GARMINTOKENS` pointing to a saved Garmin session directory |
 
 ```powershell
-python zwift_garmin.py latest --edge-1050 --non-interactive
-python zwift_garmin.py latest --fenix-8 --upload --non-interactive
+python zwift_garmin.py latest --device "Fenix 6" --non-interactive
+python zwift_garmin.py latest --device "Fenix 8" --upload --non-interactive
 ```
 
 In non-interactive mode, missing credentials or a Garmin MFA prompt cause the command to exit with an error. For a Garmin account with MFA, create a session with the library's login example and point `GARMINTOKENS` at its session directory. [Garmin login example](https://github.com/cyberjunky/python-garminconnect/blob/master/example.py)

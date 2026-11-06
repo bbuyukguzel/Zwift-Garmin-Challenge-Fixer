@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import struct
+import unicodedata
 
 import fitdecode
 from fitdecode.utils import compute_crc
@@ -17,6 +18,31 @@ EDGE_1050 = 4440
 FENIX_8 = 4536
 CYCLING, INDOOR_CYCLING = 2, 6
 SPORT_FIELDS = {"sport": (0, 1), "session": (5, 6), "lap": (25, 39)}
+
+
+def normalize_device_name(name):
+    return "".join(char for char in unicodedata.normalize("NFKD", name.casefold())
+                   if char.isascii() and char.isalnum())
+
+
+def parse_device(value):
+    from garmin_fit_sdk import Profile
+
+    value = value.strip()
+    if value.isascii() and value.isdecimal():
+        product = int(value)
+        if 0 < product < 65535:
+            return product
+        raise argparse.ArgumentTypeError("Garmin product code must be between 1 and 65534.")
+
+    name = normalize_device_name(value)
+    matches = [code for code, label in Profile["types"]["garmin_product"].items()
+               if normalize_device_name(label) == name]
+    if len(matches) == 1:
+        return matches[0]
+    raise argparse.ArgumentTypeError(
+        f"Unknown or ambiguous Garmin device {value!r}. Use a FIT profile name or numeric product code."
+    )
 
 
 def read_fit(data):
@@ -150,11 +176,14 @@ def main():
     for command in (converter, latest):
         command.add_argument("--indoor", action="store_true")
         device = command.add_mutually_exclusive_group()
+        device.add_argument("--device", dest="product", type=parse_device, metavar="MODEL_OR_CODE",
+                            help="Garmin FIT model name or numeric product code")
         device.add_argument("--edge-1050", dest="product", action="store_const", const=EDGE_1050,
-                            default=TACX_WINDOWS, help="Use the Edge 1050 product code")
+                            help="Alias for --device edge_1050")
         device.add_argument("--fenix-8", dest="product", action="store_const", const=FENIX_8,
-                            help="Use the standard fenix 8 product code")
+                            help="Alias for --device fenix8")
         device.add_argument("--garmin-reference", type=Path, help="FIT activity from your Garmin device")
+        command.set_defaults(product=TACX_WINDOWS)
         command.add_argument("--upload", action="store_true")
     uploader = commands.add_parser("upload", help="Upload an existing FIT file")
     uploader.add_argument("path", type=Path)
