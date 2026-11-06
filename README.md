@@ -70,6 +70,14 @@ Enter the MFA code if Garmin requests it. On future runs, set `GARMINTOKENS` to 
 
 ## Verify challenge credit
 
+For November Ride to 200, a Zwift ride counted after conversion with an original fēnix 8 FIT as the reference. The reference supplies the watch's model and real Unit ID. The model-only fēnix 8 and Tacx Training iOS trials did not count on the same account.
+
+```powershell
+python zwift_garmin.py latest --garmin-reference .\fenix8-reference.fit --upload --non-interactive
+```
+
+Export an original activity from your own Garmin device to create the reference file. Keep it local because it contains activity data and your device's Unit ID.
+
 Garmin requires joining the challenge and meeting its listed requirements within the challenge period. Its support guidance includes activities recorded in Tacx Training and excludes third-party sources such as Zwift from badge eligibility. TrainingPeaks Virtual has its own Garmin authorization flow. The exact server-side rules for challenge credit are undocumented. [Garmin badges](https://support.garmin.com/en-US/?faq=6pECo6UIFn7ergw8kNmfu9) · [Garmin eligibility guidance](https://support.garmin.ru/support/solutions/articles/26000043125) · [TrainingPeaks Virtual integration](https://help.trainingpeaks.com/hc/en-us/articles/41893283744909-TrainingPeaks-Virtual-Connections-Screenshots)
 
 1. Check the activity requirements for an active challenge you have joined and record your current progress.
