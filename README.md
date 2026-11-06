@@ -45,6 +45,8 @@ Add `--upload` to `latest` or `convert` to upload after conversion. If the outpu
 
 Garmin can acknowledge a file with an upload ID and leave both result lists empty. In that case, the command reports acceptance. Check Garmin Connect for the activity before retrying.
 
+When Zwift supplies an activity title, `latest --upload` applies it to the new Garmin activity. If Garmin omits the activity ID, the command looks for a unique new activity with the FIT's start time and distance.
+
 ### Run without prompts
 
 Set these variables in the environment that starts the command. If your task runner supports secrets, use its secret settings for passwords.

@@ -75,8 +75,10 @@ def download_latest_ride(*, non_interactive=False):
 
         ride = max(rides, key=activity_end)
         activity_id = numeric_id(ride.get("id_str") or ride.get("id") or ride.get("activityId"))
+        title = ride.get("name") or ride.get("activityName")
         if not ride.get("fitFileBucket") or not ride.get("fitFileKey"):
             ride = api(f"/api/activities/{activity_id}")
+            title = title or ride.get("name") or ride.get("activityName")
         bucket, key = ride.get("fitFileBucket"), ride.get("fitFileKey")
         if not bucket or not key:
             raise RuntimeError(f"FIT for Zwift activity {activity_id} is unavailable. Try again after syncing.")
@@ -88,4 +90,7 @@ def download_latest_ride(*, non_interactive=False):
             data = response.raw.read(MAX_FIT_BYTES + 1, decode_content=True)
         if len(data) > MAX_FIT_BYTES:
             raise ValueError("Downloaded FIT exceeds 50 MiB.")
-        return activity_id, data
+        title = title.strip() if isinstance(title, str) else ""
+        if title and not title.casefold().startswith("zwift - "):
+            title = f"Zwift - {title}"
+        return activity_id, data, title

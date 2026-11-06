@@ -1,12 +1,14 @@
 """Convert a Zwift ride locally and optionally upload it to Garmin Connect."""
 
 import argparse
+from datetime import datetime, timedelta
 from getpass import getpass
 import io
 import os
 from pathlib import Path
 import struct
 from tempfile import NamedTemporaryFile
+from time import sleep
 import unicodedata
 
 import fitdecode
@@ -185,8 +187,30 @@ def connect_garmin(*, non_interactive=False, save_session=False):
     return client
 
 
-def upload(path, *, non_interactive=False):
+def activity_matches(client, path):
+    sessions = [m for m in read_fit(path.read_bytes()) if m.name == "session"]
+    if len(sessions) != 1 or raw(sessions[0], 2) is None or raw(sessions[0], 9) is None:
+        return None
+    start = datetime(1989, 12, 31) + timedelta(seconds=raw(sessions[0], 2))
+    distance = raw(sessions[0], 9) / 100
+    first = (start - timedelta(days=1)).date().isoformat()
+    last = (start + timedelta(days=1)).date().isoformat()
+
+    def find():
+        return {
+            str(activity["activityId"])
+            for activity in client.get_activities_by_date(first, last)
+            if activity.get("startTimeGMT") == start.strftime("%Y-%m-%d %H:%M:%S")
+            and abs((activity.get("distance") or 0) - distance) < 1
+        }
+
+    return find
+
+
+def upload(path, *, non_interactive=False, title=""):
     client = connect_garmin(non_interactive=non_interactive)
+    find_matches = activity_matches(client, path) if title else None
+    existing = find_matches() if find_matches else set()
     response = client.upload_activity(str(path))
     result = response.get("detailedImportResult") if isinstance(response, dict) else None
     if not isinstance(result, dict):
@@ -206,6 +230,27 @@ def upload(path, *, non_interactive=False):
         print(f"Garmin accepted upload {result['uploadId']}. Check Garmin Connect for the activity.")
     else:
         raise RuntimeError("Garmin did not acknowledge the upload. Check Connect before retrying.")
+
+    if not title:
+        return
+    successes = result.get("successes") or []
+    activity_id = successes[0].get("internalId") if len(successes) == 1 else None
+    try:
+        if not activity_id and not successes and find_matches:
+            for delay in (0, 1, 2):
+                sleep(delay)
+                new_matches = find_matches() - existing
+                if new_matches:
+                    if len(new_matches) == 1:
+                        activity_id = new_matches.pop()
+                    break
+        if activity_id:
+            client.set_activity_name(str(activity_id), title)
+            print(f"Garmin activity title set to: {title}")
+        else:
+            print("Could not identify the new Garmin activity to set its title.")
+    except Exception as exc:
+        raise RuntimeError("Garmin accepted the FIT, but the title update failed. Check Connect before retrying.") from exc
 
 
 def main():
@@ -247,10 +292,11 @@ def main():
 
         reference = args.garmin_reference.read_bytes() if args.garmin_reference else None
         product, unit_id = device_from_environment(args.product) if reference is None else (TACX_WINDOWS, 0)
+        title = ""
         if args.command == "latest":
             from zwift_remote import download_latest_ride
 
-            activity_id, source = download_latest_ride(non_interactive=args.non_interactive)
+            activity_id, source, title = download_latest_ride(non_interactive=args.non_interactive)
             target = Path(f"zwift-{activity_id}.garmin.fit")
         else:
             source = args.source.read_bytes()
@@ -267,7 +313,7 @@ def main():
             if target.read_bytes() == result:
                 print(f"Already converted: {target.resolve()}")
                 if args.upload:
-                    upload(target, non_interactive=args.non_interactive)
+                    upload(target, non_interactive=args.non_interactive, title=title)
                 return
             with NamedTemporaryFile(dir=target.parent, delete=False) as file:
                 replacement = Path(file.name)
@@ -279,7 +325,7 @@ def main():
                     replacement.unlink(missing_ok=True)
         print(target.resolve(), flush=True)
         if args.upload:
-            upload(target, non_interactive=args.non_interactive)
+            upload(target, non_interactive=args.non_interactive, title=title)
     except Exception as exc:
         parser.exit(1, f"Error: {exc}\n")
 
