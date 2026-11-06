@@ -253,7 +253,7 @@ def main():
             if target.read_bytes() == result:
                 print(f"Already converted: {target.resolve()}")
                 if args.upload:
-                    print("Use the upload command if this file has not been imported yet.")
+                    upload(target, non_interactive=args.non_interactive)
                 return
             with NamedTemporaryFile(dir=target.parent, delete=False) as file:
                 replacement = Path(file.name)

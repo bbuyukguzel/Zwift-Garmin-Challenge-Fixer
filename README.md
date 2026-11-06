@@ -41,7 +41,7 @@ python -m pip install garminconnect==0.3.20
 python zwift_garmin.py upload ride.garmin.fit
 ```
 
-Add `--upload` to `latest` or `convert` to upload after conversion. If the output for the same Zwift activity differs, `latest` replaces the local FIT and proceeds with the requested upload. If the output is identical, it skips the upload. Use the standalone `upload` command to upload an existing file or retry a failed upload.
+Add `--upload` to `latest` or `convert` to upload after conversion. If the output for the same Zwift activity differs, `latest` replaces the local FIT. If the output is identical, it reuses the existing file. In both cases, `--upload` sends the file to Garmin. Use the standalone `upload` command to send a local file without downloading from Zwift.
 
 Garmin can acknowledge a file with an upload ID and leave both result lists empty. In that case, the command reports acceptance. Check Garmin Connect for the activity before retrying.
 
