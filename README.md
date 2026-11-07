@@ -10,6 +10,31 @@ Use Python 3.12 or later. Run these commands from the project directory.
 python -m pip install -r requirements.txt
 ```
 
+### Local credentials with `.env`
+
+The CLI automatically reads `.env` beside `zwift_garmin.py`. Existing environment variables take precedence. Copy the template once and fill in your credentials:
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+Set `GARMIN_EMAIL`, `GARMIN_PASSWORD`, `ZWIFT_USER`, and `ZWIFT_PASSWORD`. The template configures a Garmin session directory under Windows Local AppData and selects Fenix 8. Keep passwords quoted. `.env` is ignored by Git; `.env.example` contains no credentials.
+
+Create your Garmin session once, entering an MFA code if requested:
+
+```powershell
+python zwift_garmin.py garmin-login
+```
+
+Then download, convert, and upload without setting environment variables in each terminal:
+
+```powershell
+python zwift_garmin.py latest --upload
+```
+
+To use your watch's real identity, add its numeric `GARMIN_UNIT_ID` to `.env`, or pass `--garmin-reference device-ride.fit` with an original activity recorded by your watch. After saving the session, you may clear `GARMIN_PASSWORD` in `.env`; log in again with credentials if the session expires.
+
 ## Download your latest Zwift ride
 
 After saving the ride to your Zwift account, run this on any computer with Python.
@@ -49,7 +74,7 @@ When Zwift supplies an activity title, `latest --upload` applies it to the new G
 
 ### Run without prompts
 
-Set these variables in the environment that starts the command. If your task runner supports secrets, use its secret settings for passwords.
+Set these variables in `.env` or in the environment that starts the command. If your task runner supports secrets, use its secret settings for passwords.
 
 | Operation | Environment variables |
 | --- | --- |

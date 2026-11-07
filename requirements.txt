@@ -1,3 +1,4 @@
 fitdecode==0.11.0
 garmin-fit-sdk>=21.221.0,<22
 requests>=2.32,<3
+python-dotenv>=1.0,<2

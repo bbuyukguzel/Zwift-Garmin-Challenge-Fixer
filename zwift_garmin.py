@@ -13,6 +13,7 @@ import unicodedata
 
 import fitdecode
 from fitdecode.utils import compute_crc
+from dotenv import load_dotenv
 
 
 GARMIN, ZWIFT, TACX_WINDOWS = 1, 260, 20533
@@ -254,6 +255,7 @@ def upload(path, *, non_interactive=False, title=""):
 
 
 def main():
+    load_dotenv(Path(__file__).resolve().with_name(".env"), override=False)
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     converter = commands.add_parser("convert", help="Create a new FIT file")
