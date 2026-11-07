@@ -33,7 +33,29 @@ Then download, convert, and upload without setting environment variables in each
 python zwift_garmin.py latest --upload
 ```
 
-To use your watch's real identity, add its numeric `GARMIN_UNIT_ID` to `.env`, or pass `--garmin-reference device-ride.fit` with an original activity recorded by your watch. After saving the session, you may clear `GARMIN_PASSWORD` in `.env`; log in again with credentials if the session expires.
+To use your watch's real identity, [find its Unit ID](#find-your-garmin-unit-id) and add it as `GARMIN_UNIT_ID` to `.env`, or pass `--garmin-reference device-ride.fit` with an original activity recorded by your watch. After saving the session, you may clear `GARMIN_PASSWORD` in `.env`; log in again with credentials if the session expires.
+
+### Find your Garmin Unit ID
+
+You do not need a reference FIT file if you configure your device model and its real numeric Unit ID. Find the Unit ID using either method:
+
+- **On your Fenix 8:** open **Watch Settings > System > About** and find **Unit ID**. Use this number, which is different from the serial number. [Garmin device information instructions](https://www8.garmin.com/manuals/webhelp/GUID-EECCAC99-90D6-4AB1-9A3A-EC433D3365E2/EN-US/GUID-E131EDC8-BB20-4F2B-AF7B-E6EC45B107E0.html)
+- **On Garmin Connect web:** sign in, open **Devices**, and select your watch. The device page URL has the form `https://connect.garmin.com/app/device/XXXX`. The numeric value in place of `XXXX` is the Unit ID to use.
+
+Open `.env` and set the following values, replacing `YOUR_NUMERIC_UNIT_ID` with your own number. If the `GARMIN_UNIT_ID` line starts with `#`, remove that character to enable it:
+
+```dotenv
+GARMIN_DEVICE="Fenix 8"
+GARMIN_UNIT_ID="YOUR_NUMERIC_UNIT_ID"
+```
+
+Save `.env`, then run:
+
+```powershell
+python zwift_garmin.py latest --upload
+```
+
+The CLI uses the model and Unit ID from `.env`; no `--garmin-reference` argument is needed.
 
 ## Download your latest Zwift ride
 
