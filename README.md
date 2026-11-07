@@ -37,6 +37,8 @@ To use your watch's real identity, [find its Unit ID](#find-your-garmin-unit-id)
 
 ### Find your Garmin Unit ID
 
+**For Garmin challenge credit, include your watch's real Unit ID.** In testing on this account, uploads without the Unit ID did not count toward challenge progress, even when the device model was set to Fenix 8. Configure `GARMIN_UNIT_ID` below or use an original watch-recorded FIT with `--garmin-reference` to supply it.
+
 You do not need a reference FIT file if you configure your device model and its real numeric Unit ID. Find the Unit ID using either method:
 
 - **On your Fenix 8:** open **Watch Settings > System > About** and find **Unit ID**. Use this number, which is different from the serial number. [Garmin device information instructions](https://www8.garmin.com/manuals/webhelp/GUID-EECCAC99-90D6-4AB1-9A3A-EC433D3365E2/EN-US/GUID-E131EDC8-BB20-4F2B-AF7B-E6EC45B107E0.html)
@@ -120,6 +122,8 @@ Enter the MFA code if Garmin requests it. On future runs, set `GARMINTOKENS` to 
 ## Verify challenge credit
 
 For November Ride to 200, a Zwift ride counted after conversion with an original fēnix 8 FIT as the reference. The reference supplies the watch's model and real Unit ID. The model-only fēnix 8 and Tacx Training iOS trials did not count on the same account.
+
+An upload accepted by Garmin Connect does not by itself confirm challenge credit. In these tests, the real device Unit ID was needed for challenge progress; selecting a device model alone was insufficient. This is an observed result, and challenge eligibility still depends on Garmin's rules.
 
 Set `GARMIN_DEVICE` to your device model and `GARMIN_UNIT_ID` to its real numeric Unit ID. With both variables available, you can omit the device arguments:
 
