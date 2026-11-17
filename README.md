@@ -33,21 +33,36 @@ Then download, convert, and upload without setting environment variables in each
 python zwift_garmin.py latest --upload
 ```
 
-To use your watch's real identity, [find its Unit ID](#find-your-garmin-unit-id) and add it as `GARMIN_UNIT_ID` to `.env`, or pass `--garmin-reference device-ride.fit` with an original activity recorded by your watch. After saving the session, you may clear `GARMIN_PASSWORD` in `.env`; log in again with credentials if the session expires.
+Prefer your Garmin Edge's identity when available: [choose a device identity](#choose-a-garmin-device-identity) and add its model and Unit ID to `.env`, or pass `--garmin-reference edge-ride.fit` with an original activity recorded by your Edge. After saving the session, you may clear `GARMIN_PASSWORD` in `.env`; log in again with credentials if the session expires.
+
+### Choose a Garmin device identity
+
+**Using a Garmin Edge model and its matching Unit ID is recommended when available.** Testing confirmed the following behavior:
+
+- Using the watch's own model and Unit ID prevented the imported activity from syncing back to the watch.
+- **The activity still counted toward Garmin challenges even though it did not sync to the watch.**
+- Using a matching Garmin Edge model and Unit ID resolved the watch sync issue.
+
+If you own a Garmin Edge cycling computer, configure its model and real numeric Unit ID in `.env`:
+
+```dotenv
+GARMIN_DEVICE="Edge 840"
+GARMIN_UNIT_ID="YOUR_EDGE_UNIT_ID"
+```
+
+Replace `Edge 840` with your actual Edge model. Use the **Unit ID**, which is different from the serial number printed on the device. You can also pass `--garmin-reference edge-ride.fit` with an original activity recorded by your Edge to obtain both values from that file.
 
 ### Find your Garmin Unit ID
 
-**For Garmin challenge credit, include your watch's real Unit ID.** In testing on this account, uploads without the Unit ID did not count toward challenge progress, even when the device model was set to Fenix 8. Configure `GARMIN_UNIT_ID` below or use an original watch-recorded FIT with `--garmin-reference` to supply it.
-
 You do not need a reference FIT file if you configure your device model and its real numeric Unit ID. Find the Unit ID using either method:
 
-- **On your Fenix 8:** open **Watch Settings > System > About** and find **Unit ID**. Use this number, which is different from the serial number. [Garmin device information instructions](https://www8.garmin.com/manuals/webhelp/GUID-EECCAC99-90D6-4AB1-9A3A-EC433D3365E2/EN-US/GUID-E131EDC8-BB20-4F2B-AF7B-E6EC45B107E0.html)
-- **On Garmin Connect web:** sign in, open **Devices**, and select your watch. The device page URL has the form `https://connect.garmin.com/app/device/XXXX`. The numeric value in place of `XXXX` is the Unit ID to use.
+- **On your Edge:** find **Unit ID** in the device's system information. The menu path varies by model. [Garmin Edge identification instructions](https://support.garmin.com/en-US/?faq=BzTjE5n5Te6ySmMlccHOo6)
+- **On Garmin Connect web:** sign in, open **Devices**, and select your Garmin device. The device page URL has the form `https://connect.garmin.com/app/device/XXXX`. The numeric value in place of `XXXX` is the Unit ID to use.
 
 Open `.env` and set the following values, replacing `YOUR_NUMERIC_UNIT_ID` with your own number. If the `GARMIN_UNIT_ID` line starts with `#`, remove that character to enable it:
 
 ```dotenv
-GARMIN_DEVICE="Fenix 8"
+GARMIN_DEVICE="Edge 840"
 GARMIN_UNIT_ID="YOUR_NUMERIC_UNIT_ID"
 ```
 
@@ -58,6 +73,19 @@ python zwift_garmin.py latest --upload
 ```
 
 The CLI uses the model and Unit ID from `.env`; no `--garmin-reference` argument is needed.
+
+### No Edge device? Try an experimental test identity
+
+If you do not own an Edge, you can try this dummy Edge 500 identity used in the [`python-fitparse` tests](https://github.com/dtcooper/python-fitparse/blob/master/tests/test.py#L40-L51):
+
+```dotenv
+GARMIN_DEVICE="1036"
+GARMIN_UNIT_ID="558069241"
+```
+
+Product code `1036` identifies an Edge 500. The test source explicitly describes `558069241` as a random serial number, so it is **not a verified real Edge Unit ID**.
+
+This identity can be tried as an experimental fallback. **Garmin Connect acceptance, challenge credit, and watch sync have not been verified for this dummy identity.**
 
 ## Download your latest Zwift ride
 
@@ -121,11 +149,11 @@ Enter the MFA code if Garmin requests it. On future runs, set `GARMINTOKENS` to 
 
 ## Verify challenge credit
 
-For November Ride to 200, a Zwift ride counted after conversion with an original fēnix 8 FIT as the reference. The reference supplies the watch's model and real Unit ID. The model-only fēnix 8 and Tacx Training iOS trials did not count on the same account.
+For November Ride to 200, a Zwift ride counted after conversion with an original fēnix 8 FIT as the reference. The reference supplies the watch's model and real Unit ID. The activity counted toward the challenge even though it did not sync back to the watch. Using a matching Garmin Edge model and Unit ID resolved the watch sync issue. The model-only fēnix 8 and Tacx Training iOS trials did not count.
 
 An upload accepted by Garmin Connect does not by itself confirm challenge credit. In these tests, the real device Unit ID was needed for challenge progress; selecting a device model alone was insufficient. This is an observed result, and challenge eligibility still depends on Garmin's rules.
 
-Set `GARMIN_DEVICE` to your device model and `GARMIN_UNIT_ID` to its real numeric Unit ID. With both variables available, you can omit the device arguments:
+Prefer your Edge when available: set `GARMIN_DEVICE` to its model and `GARMIN_UNIT_ID` to its real numeric Unit ID. With both variables available, you can omit the device arguments:
 
 ```powershell
 python zwift_garmin.py latest --upload --non-interactive
